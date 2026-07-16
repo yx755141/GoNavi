@@ -1,0 +1,95 @@
+name: Fork Build (Windows AMD64)
+
+on:
+  push:
+    branches:
+      - dev-yx755141-20260715fix1
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Windows amd64
+    runs-on: windows-2025-vs2026
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache frontend node_modules
+        uses: actions/cache@v5
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node20-frontend-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Install Wails
+        run: go install -v github.com/wailsapp/wails/v2/cmd/wails@v2.11.0
+
+      - name: Build frontend dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p frontend/dist
+          printf '<!doctype html><title>GoNavi</title>\n' > frontend/dist/index.html
+          wails generate module
+          node frontend/scripts/wails-frontend-install.mjs
+          npm --prefix frontend run build
+
+      - name: Generate version
+        id: version
+        shell: bash
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          DEV_VERSION="dev-${SHORT_SHA}"
+          echo "version=${DEV_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "📌 Version: ${DEV_VERSION}"
+
+      - name: Install UPX
+        shell: pwsh
+        run: |
+          $UPX_VERSION = "4.2.4"
+          $url = "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-win64.zip"
+          $zipPath = "$env:RUNNER_TEMP\upx.zip"
+          $extractPath = "$env:RUNNER_TEMP\upx"
+          Invoke-WebRequest -Uri $url -OutFile $zipPath -UseBasicParsing
+          Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
+          $upxDir = Get-ChildItem -Path $extractPath -Directory | Select-Object -First 1
+          "$($upxDir.FullName)" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          upx --version
+
+      - name: Build GoNavi
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEV_VERSION="${{ steps.version.outputs.version }}"
+          wails build -s -skipbindings -platform windows/amd64 -clean -o gonavi.exe -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${DEV_VERSION}"
+
+      - name: Compress binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "📦 Compressing gonavi.exe..."
+          upx --best --lzma build/bin/gonavi.exe -o build/bin/gonavi-upx.exe 2>/dev/null || cp build/bin/gonavi.exe build/bin/gonavi-upx.exe
+          echo "✅ Done"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: gonavi-windows-amd64-${{ steps.version.outputs.version }}
+          path: build/bin/gonavi-upx.exe
+          if-no-files-found: error
