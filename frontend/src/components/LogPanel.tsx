@@ -83,7 +83,7 @@ const LogPanel: React.FC<LogPanelProps> = ({
         {
             title: t('log_panel.column.status'),
             dataIndex: 'status',
-            width: 70,
+            width: 60,
             render: (status: string) => (
                 <Tag color={status === 'success' ? 'success' : 'error'} style={{ marginRight: 0, borderRadius: 999, paddingInline: 8, fontSize: 11, fontWeight: 700 }}>
                     {status === 'success' ? 'OK' : 'ERR'}
@@ -93,8 +93,20 @@ const LogPanel: React.FC<LogPanelProps> = ({
         {
             title: t('log_panel.column.duration'),
             dataIndex: 'duration',
-            width: 70,
+            width: 65,
             render: (d: number) => <span style={{ color: d > 1000 ? 'orange' : 'inherit', fontSize: '12px' }}>{d}ms</span>
+        },
+        {
+            title: 'DB',
+            dataIndex: 'dbTiming',
+            width: 60,
+            render: (d: number | undefined) => d ? <span style={{ fontSize: '11px', color: panelMutedTextColor }}>{d}ms</span> : null
+        },
+        {
+            title: 'Trace',
+            dataIndex: 'traceId',
+            width: 80,
+            render: (id: string | undefined) => id ? <span style={{ fontSize: '11px', color: panelMutedTextColor, fontFamily: 'var(--gn-font-mono)' }}>{id.slice(0, 16)}</span> : null
         },
         {
             title: t('log_panel.column.sql_message'),
@@ -136,7 +148,7 @@ const LogPanel: React.FC<LogPanelProps> = ({
                     size="small"
                     pagination={false}
                     rowKey="id"
-                    showHeader={false}
+                    showHeader={true}
                 />
             )}
         </div>

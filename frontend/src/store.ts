@@ -1834,6 +1834,8 @@ export interface SqlLog {
   category?: "query" | "transaction";
   transactionId?: string;
   transactionAction?: "commit" | "rollback";
+  traceId?: string;
+  dbTiming?: number;
 }
 
 /** 首页一键重新打开的最近连接 / 数据库目标。 */
