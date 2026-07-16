@@ -59,19 +59,6 @@ jobs:
           echo "version=${DEV_VERSION}" >> "$GITHUB_OUTPUT"
           echo "📌 Version: ${DEV_VERSION}"
 
-      - name: Install UPX
-        shell: pwsh
-        run: |
-          $UPX_VERSION = "4.2.4"
-          $url = "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-win64.zip"
-          $zipPath = "$env:RUNNER_TEMP\upx.zip"
-          $extractPath = "$env:RUNNER_TEMP\upx"
-          Invoke-WebRequest -Uri $url -OutFile $zipPath -UseBasicParsing
-          Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
-          $upxDir = Get-ChildItem -Path $extractPath -Directory | Select-Object -First 1
-          "$($upxDir.FullName)" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-          upx --version
-
       - name: Build GoNavi
         shell: bash
         run: |
@@ -79,17 +66,9 @@ jobs:
           DEV_VERSION="${{ steps.version.outputs.version }}"
           wails build -s -skipbindings -platform windows/amd64 -clean -o gonavi.exe -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${DEV_VERSION}"
 
-      - name: Compress binary
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "📦 Compressing gonavi.exe..."
-          upx --best --lzma build/bin/gonavi.exe -o build/bin/gonavi-upx.exe 2>/dev/null || cp build/bin/gonavi.exe build/bin/gonavi-upx.exe
-          echo "✅ Done"
-
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
           name: gonavi-windows-amd64-${{ steps.version.outputs.version }}
-          path: build/bin/gonavi-upx.exe
+          path: build/bin/gonavi.exe
           if-no-files-found: error
