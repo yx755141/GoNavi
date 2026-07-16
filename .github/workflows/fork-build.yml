@@ -53,11 +53,18 @@ jobs:
       - name: Generate version
         id: version
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          DEV_VERSION="dev-${SHORT_SHA}"
-          echo "version=${DEV_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "📌 Version: ${DEV_VERSION}"
+          set -euo pipefail
+          TODAY=$(date +%Y%m%d)
+          COUNT=$(gh release list --repo "${{ github.repository }}" --limit 50 2>/dev/null \
+            | grep -c "^gonavi-${TODAY}-" || true)
+          COUNT=$((COUNT + 1))
+          RELEASE_TAG="gonavi-${TODAY}-${COUNT}"
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${TODAY}.${COUNT}" >> "$GITHUB_OUTPUT"
+          echo "📌 Release: ${RELEASE_TAG}"
 
       - name: Build GoNavi
         shell: bash
@@ -68,18 +75,16 @@ jobs:
 
       - name: Create Release
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          VERSION="${{ steps.version.outputs.version }}"
-          RELEASE_TAG="dev-build"
-          echo "📦 Creating/updating release: ${RELEASE_TAG}"
-          # delete existing release and tag (if any)
-          gh release delete "${RELEASE_TAG}" --yes --cleanup-tag 2>/dev/null || true
-          # create new release
+          RELEASE_TAG="${{ steps.version.outputs.release_tag }}"
+          echo "📦 Creating release: ${RELEASE_TAG}"
           gh release create "${RELEASE_TAG}" \
             build/bin/gonavi.exe \
             --repo "${{ github.repository }}" \
-            --title "Dev Build (${VERSION})" \
+            --title "${RELEASE_TAG}" \
             --notes "自动构建 from ${GITHUB_SHA}" \
             --prerelease
-          echo "✅ Release created: https://github.com/${{ github.repository }}/releases/tag/${RELEASE_TAG}"
+          echo "✅ https://github.com/${{ github.repository }}/releases/tag/${RELEASE_TAG}"

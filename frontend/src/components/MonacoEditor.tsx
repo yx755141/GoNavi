@@ -11,7 +11,7 @@ const DEFAULT_FONT_SIZE = 14;
 const MIN_FONT_SIZE = 12;
 const MAX_FONT_SIZE = 20;
 const QUERY_EDITOR_AI_INLINE_CONTEXT_KEY = 'gonaviAiInlineSuggestionVisible';
-const PRINTABLE_INPUT_FALLBACK_DELAY_MS = 80;
+const PRINTABLE_INPUT_FALLBACK_DELAY_MS = 30;
 let monacoConfiguredPromise: Promise<void> | null = null;
 let transparentThemesRegistered = false;
 
@@ -330,9 +330,10 @@ export const installPrintableInputFallback = (editor: any, monaco: any) => {
     return true;
   };
 
-  const hasNativeInputApplied = (pending: NonNullable<typeof pendingInput>): boolean => (
-    getPendingNativeInputDelta(pending)?.insertedText === pending.text
-  );
+  const hasNativeInputApplied = (pending: NonNullable<typeof pendingInput>): boolean => {
+    const delta = getPendingNativeInputDelta(pending);
+    return delta !== null && isSubsequence(pending.text, delta.insertedText);
+  };
 
   const isPendingInputContextCurrent = (
     pending: NonNullable<typeof pendingInput>,
