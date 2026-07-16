@@ -66,12 +66,24 @@ jobs:
           echo "version=${TODAY}.${COUNT}" >> "$GITHUB_OUTPUT"
           echo "📌 Release: ${RELEASE_TAG}"
 
+      - name: Install UPX
+        shell: pwsh
+        run: choco install upx --yes --no-progress
+
       - name: Build GoNavi
         shell: bash
         run: |
           set -euo pipefail
           DEV_VERSION="${{ steps.version.outputs.version }}"
           wails build -s -skipbindings -platform windows/amd64 -clean -o gonavi.exe -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${DEV_VERSION}"
+
+      - name: Compress binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "📦 Compressing gonavi.exe..."
+          upx --best --lzma build/bin/gonavi.exe -o build/bin/gonavi.exe 2>/dev/null || true
+          ls -lh build/bin/gonavi.exe
 
       - name: Create Release
         shell: bash
