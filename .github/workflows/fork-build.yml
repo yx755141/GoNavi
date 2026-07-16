@@ -66,9 +66,20 @@ jobs:
           DEV_VERSION="${{ steps.version.outputs.version }}"
           wails build -s -skipbindings -platform windows/amd64 -clean -o gonavi.exe -ldflags "-s -w -X GoNavi-Wails/internal/app.AppVersion=${DEV_VERSION}"
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: gonavi-windows-amd64-${{ steps.version.outputs.version }}
-          path: build/bin/gonavi.exe
-          if-no-files-found: error
+      - name: Create Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          RELEASE_TAG="dev-build"
+          echo "📦 Creating/updating release: ${RELEASE_TAG}"
+          # delete existing release and tag (if any)
+          gh release delete "${RELEASE_TAG}" --yes --cleanup-tag 2>/dev/null || true
+          # create new release
+          gh release create "${RELEASE_TAG}" \
+            build/bin/gonavi.exe \
+            --repo "${{ github.repository }}" \
+            --title "Dev Build (${VERSION})" \
+            --notes "自动构建 from ${GITHUB_SHA}" \
+            --prerelease
+          echo "✅ Release created: https://github.com/${{ github.repository }}/releases/tag/${RELEASE_TAG}"
