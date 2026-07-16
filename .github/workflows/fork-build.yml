@@ -82,7 +82,10 @@ jobs:
         run: |
           set -euo pipefail
           echo "📦 Compressing gonavi.exe..."
-          upx --best --lzma build/bin/gonavi.exe -o build/bin/gonavi.exe 2>/dev/null || true
+          ls -lh build/bin/gonavi.exe
+          upx --best --lzma build/bin/gonavi.exe -o build/bin/gonavi-upx.exe
+          mv -f build/bin/gonavi-upx.exe build/bin/gonavi.exe
+          echo "✅ After UPX:"
           ls -lh build/bin/gonavi.exe
 
       - name: Create Release
