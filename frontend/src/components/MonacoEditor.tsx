@@ -35,9 +35,6 @@ export const installMonacoWorkerEnvironment = (
     ...(scope.MonacoEnvironment || {}),
     getWorker(_moduleId: string, label: string) {
       if (label === 'json') return workers.json();
-      if (label === 'css' || label === 'scss' || label === 'less') return workers.css();
-      if (label === 'html' || label === 'handlebars' || label === 'razor') return workers.html();
-      if (label === 'typescript' || label === 'javascript') return workers.typescript();
       return workers.editor();
     },
   };
