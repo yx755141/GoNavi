@@ -866,6 +866,13 @@ const TabManager: React.FC = React.memo(() => {
 
     const menuItems: MenuProps['items'] = [
       {
+        key: 'close-current',
+        label: t('tab_manager.menu.close_current'),
+        icon: <CloseOutlined />,
+        onClick: () => closeTabsWithSQLFilePrompt([tab.id], () => closeTab(tab.id)),
+      },
+      { type: 'divider' },
+      {
         key: 'tab-display-settings',
         icon: <SettingOutlined />,
         label: t('tab_manager.menu.tab_display_settings'),

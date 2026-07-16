@@ -7775,6 +7775,7 @@
   "tab_manager.kind_badge.trigger": "触发器",
   "tab_manager.kind_badge.view": "视图",
   "tab_manager.menu.close_all": "关闭所有页",
+  "tab_manager.menu.close_current": "关闭当前页",
   "tab_manager.menu.close_left": "关闭左侧页",
   "tab_manager.menu.close_other": "关闭其他页",
   "tab_manager.menu.close_right": "关闭右侧页",

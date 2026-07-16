@@ -5888,7 +5888,14 @@ const QueryEditor: React.FC<{ tab: TabData; isActive?: boolean }> = ({ tab, isAc
                   : undefined);
           const formatterLanguage = resolveQueryEditorFormatterLanguage(conn);
           const sourceSql = getCurrentQuery();
-          const formatted = format(sourceSql, { language: formatterLanguage, keywordCase: sqlFormatOptions.keywordCase });
+          let formatted: string;
+          try {
+              formatted = format(sourceSql, { language: formatterLanguage, keywordCase: sqlFormatOptions.keywordCase });
+          } catch (_firstErr) {
+              // 首选项方言格式化失败时回退到通用 sql 方言
+              console.warn('SQL formatter failed with', formatterLanguage, 'falling back to sql', _firstErr);
+              formatted = format(sourceSql, { language: 'sql', keywordCase: sqlFormatOptions.keywordCase });
+          }
           if (sourceSql === formatted) {
               return;
           }
@@ -5922,7 +5929,7 @@ const QueryEditor: React.FC<{ tab: TabData; isActive?: boolean }> = ({ tab, isAc
       }
       syncQueryToEditor(formatted);
   } catch (e) {
-          void message.error(translate('query_editor.message.format_failed'));
+          void message.error(translate('query_editor.message.format_failed') + ': ' + String(e));
       }
   };
 

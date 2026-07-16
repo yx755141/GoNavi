@@ -7775,6 +7775,7 @@
   "tab_manager.kind_badge.trigger": "トリガー",
   "tab_manager.kind_badge.view": "ビュー",
   "tab_manager.menu.close_all": "すべてのタブを閉じる",
+  "tab_manager.menu.close_current": "現在のタブを閉じる",
   "tab_manager.menu.close_left": "左側のタブを閉じる",
   "tab_manager.menu.close_other": "他のタブを閉じる",
   "tab_manager.menu.close_right": "右側のタブを閉じる",
